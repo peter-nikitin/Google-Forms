@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top" />
+    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css" />
+    <!-- The CSS package above applies Google styling to buttons and other elements. -->
+    <style>
+        .branding-below {
+            bottom: 54px;
+            top: 0;
+        }
+        
+        .branding-text {
+            left: 7px;
+            position: relative;
+            top: 3px;
+        }
+        
+        .logo {
+            vertical-align: middle;
+        }
+        
+        .width-100 {
+            width: 100%;
+            box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+        }
+        
+        label {
+            font-weight: bold;
+        }
+        
+        #creator-options,
+        #respondent-options {
+            background-color: #eee;
+            border-color: #eee;
+            border-width: 5px;
+            border-style: solid;
+            display: none;
+        }
+        
+        #creator-email,
+        #respondent-email,
+        #button-bar,
+        #submit-subject {
+            margin-bottom: 10px;
+        }
+        
+        .block__item {
+            margin-bottom: 10px;
+        }
+        
+        #response-step {
+            display: inline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar branding-below">
+        <form>
+            <div class="block">
+                <h2>Настройки запроса в Mindbox</h2>
+                <div class="block__item">
+                    <label>Операция <br />
+              <input type="text" id="operation" />
+            </label>
+                </div>
+                <div class="block__item">
+                    <label>Эндпоинт <br />
+              <input type="text" id="endpoint" />
+            </label>
+                </div>
+            </div>
+
+            <h2>Настройки полей формы</h2>
+            <div class="block form-group">
+                <div id="field-options"></div>
+            </div>
+
+            <div class="block" id="button-bar">
+                <button class="action" id="save-settings">Сохранить</button>
+                <button id="load-settings">Обновить</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script>
+        var globalSetting;
+        /**
+         * On document load, assign required handlers to each element,
+         * and attempt to load any saved settings.
+         */
+        $(function() {
+            $("#save-settings").click(saveSettingsToServer);
+            $("#load-settings").click(updateSettings);
+            //$('#creator-notify').click(toggleCreatorNotify);
+            // $('#respondent-notify').click(toggleRespondentNotify);
+            // $('#response-step').change(validateNumber);
+            google.script.run
+                .withSuccessHandler(loadSettings)
+                .withFailureHandler(showStatus)
+                .withUserObject($("#button-bar").get())
+                .getSettings();
+        });
+
+        /**
+         * Callback function that populates the notification options using
+         * previously saved values.
+         *
+         * @param {Object} settings The saved settings from the client.
+         */
+        function loadSettings(settings) {
+            $("#operation").val(settings.operation);
+            $("#endpoint").val(settings.endpoint);
+            $("#key").val(settings.key);
+
+            globalSetting = {
+                formItems: settings.formItems,
+            };
+
+            for (var i = 0; i < settings.formItems.length; i++) {
+                var line = document.createElement("tr");
+
+                var lineLabelFromSettings = "";
+                var lineLabelFromSettingsString =
+                    settings[settings.formItems[i]["id"]];
+                if (typeof lineLabelFromSettingsString !== "undefined") {
+                    lineLabelFromSettings = lineLabelFromSettingsString.split("-");
+                }
+                console.log(lineLabelFromSettings);
+                line.innerHTML = `
+        <h3>${settings.formItems[i]["title"]}</h3>
+        <div>
+         
+<div class="block form-group">
+  <label for=${settings.formItems[i]["id"]}-type>Тип поля</label>
+  <select id=${settings.formItems[i]["id"]}-type class="input-types">
+    <option value="none" ${
+      lineLabelFromSettings[0] === "none" ? "selected" : ""
+    }>Не передавать</option> 
+    <option disabled>_________</option>
+    <option value="authenticationTicket" ${
+      lineLabelFromSettings[0] === "authenticationTicket" ? "selected" : ""
+    }>Тикет</option> 
+    <option disabled>_________</option>
+    <option value="email" ${
+      lineLabelFromSettings[0] === "email" ? "selected" : ""
+    }>Email</option> 
+    <option value="mobilePhone" ${
+      lineLabelFromSettings[0] === "mobilePhone" ? "selected" : ""
+    }>Телефон</option> 
+    <option disabled>_________</option>
+    <option value="birthDate" ${
+      lineLabelFromSettings[0] === "birthDate" ? "selected" : ""
+    }>Дата рождения</option> 
+    <option disabled>_________</option>
+    <option value="firstName" ${
+      lineLabelFromSettings[0] === "firstName" ? "selected" : ""
+    } >Имя</option> 
+    <option value="lastName" ${
+      lineLabelFromSettings[0] === "lastName" ? "selected" : ""
+    } >Фамилия</option>
+    <option value="middleName" ${
+      lineLabelFromSettings[0] === "middleName" ? "selected" : ""
+    } >Отчество</option>
+    <option disabled>_________</option>
+    <option value="customFields" ${
+      lineLabelFromSettings[0] === "customFields" ? "selected" : ""
+    }>Доп. поле</option>
+    <option value="ids" ${
+      lineLabelFromSettings[0] === "ids" ? "selected" : ""
+    }>Идентификатор</option>
+  </select>
+</div>
+<div class="block form-group custom-fields-settings">
+  <label>
+    Название поля <br />
+    <input type="TEXT" id=${settings.formItems[i]["id"]} value=${
+            lineLabelFromSettings[2] || ""
+          } >
+  </label>
+</div>
+<div class="block form-group custom-fields-settings">
+  <label>
+     <input type="checkbox" id=${settings.formItems[i]["id"]}-multiple ${
+            lineLabelFromSettings[1] === "true" ? "checked" : ""
+          } >
+      Множественное?
+   </label>
+</div>
+<hr>
+        </div>
+         
+        `;
+
+                $("#field-options").append(line);
+
+                function toggleInput(event) {
+                    var target = $(event.target);
+                    console.log(target.parent().parent().find(".input-name"));
+                    if (
+                        event.target.value === "customFields" ||
+                        event.target.value === "ids"
+                    ) {
+                        target.parent().parent().find(".custom-fields-settings").show();
+                        target.parent().parent().find("input[type=checkbox]").prop('checked', false);
+                    } else {
+                        target.parent().parent().find(".custom-fields-settings").hide();
+                    }
+                }
+                $(".input-types").change(toggleInput);
+
+                console.log($("[value='customFields']"));
+
+                $(".custom-fields-settings").hide();
+
+                $(".input-types").each(function(index, element) {
+                    if ($(this).val() === "customFields" || $(this).val() === "ids") {
+                        $(this).parent().parent().find(".custom-fields-settings").show();
+                    }
+                });
+            }
+        }
+
+        function updateSettings() {
+            google.script.run
+                .withSuccessHandler(function(settings) {
+                    $("#field-options")[0].innerHTML = "";
+
+                    loadSettings(settings);
+                })
+                .withFailureHandler(function(msg, element) {
+                    showStatus(msg, $("#button-bar"));
+                    element.disabled = false;
+                })
+                .withUserObject(this)
+                .getSettings();
+        }
+
+        /**
+         * Collects the options specified in the add-on sidebar and sends them to
+         * be saved as Properties on the server.
+         */
+        function saveSettingsToServer() {
+            this.disabled = true;
+            $("#status").remove();
+            var operation = $("#operation")[0].value;
+            var endpoint = $("#endpoint")[0].value;
+            var initialRormLabel = {};
+
+            var settings = {
+                operation: operation,
+                endpoint: endpoint,
+            };
+
+            var settingsWithFormItemsFields = globalSetting.formItems.reduce(
+                (settingsObj, formItem) => {
+                    var formItemType = $("#" + formItem.id + "-type")[0].value;
+                    var formItemFieldName = $("#" + formItem.id)[0].value;
+                    var isFormItemFieldMultiple = $("#" + formItem.id + "-multiple").is(
+                        ":checked"
+                    );
+
+                    return {
+                        ...settingsObj,
+                        [formItem.id]: `${formItemType}-${isFormItemFieldMultiple}-${formItemFieldName}`,
+                    };
+                },
+                settings
+            );
+            console.log(settingsWithFormItemsFields);
+            // Save the settings on the server
+            google.script.run
+                .withSuccessHandler(function(msg, element) {
+                    showStatus("Saved settings", $("#button-bar"));
+                    element.disabled = false;
+                })
+                .withFailureHandler(function(msg, element) {
+                    showStatus(msg, $("#button-bar"));
+                    element.disabled = false;
+                })
+                .withUserObject(this)
+                .saveSettings(settingsWithFormItemsFields);
+        }
+
+        /**
+         * Inserts a div that contains an status message after a given element.
+         *
+         * @param {String} msg The status message to display.
+         * @param {Object} element The element after which to display the Status.
+         */
+        function showStatus(msg, element) {
+            var div = $("<div>")
+                .attr("id", "status")
+                .attr("class", "error")
+                .text(msg);
+            $(element).after(div);
+        }
+    </script>
+</body>
+
+</html>
