@@ -223,6 +223,14 @@ function respondToFormSubmit(e) {
                 }
                 bodyToMb.customer.ids[fieldName] = fieldValue;
                 break;
+            case "actionCustomFields":
+                if (typeof bodyToMb.customerAction === "undefined") {
+                    bodyToMb.customerAction = {
+                        customFields: {}
+                    };
+                }
+                bodyToMb.customerAction.customFields[fieldName] = fieldValue;
+                break;
 
             default:
                 break;
