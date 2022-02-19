@@ -107,6 +107,118 @@
                 .getSettings();
         });
 
+        const formOptions = [{
+            name: "Не передавать",
+            bodyField: "none",
+            isSeparator: false
+        }, {
+            isSeparator: true
+        }, {
+            bodyField: "authenticationTicket",
+            name: "Тикет",
+            isSeparator: false
+        }, {
+            isSeparator: true
+        }, {
+            bodyField: "email",
+            name: "Email",
+            isSeparator: false
+        }, {
+            bodyField: "mobilePhone",
+            name: "Телефон",
+            isSeparator: false
+        }, {
+            isSeparator: true
+        }, {
+            bodyField: "birthDate",
+            name: "Дата рождения",
+            isSeparator: false
+        }, {
+            isSeparator: true
+        }, {
+            bodyField: "firstName",
+            name: "Имя",
+            isSeparator: false
+        }, {
+            bodyField: "lastName",
+            name: "Фамилия",
+            isSeparator: false
+        }, {
+            bodyField: "middleName",
+            name: "Отчество",
+            isSeparator: false
+        }, {
+            isSeparator: true
+        }, {
+            bodyField: "customFields",
+            name: "Доп. поле",
+            isSeparator: false
+        }, {
+            bodyField: "ids",
+            name: "Идентификатор",
+            isSeparator: false
+        }, ]
+
+        const isActive = (option, setting) => setting === option ? "selected" : "";
+
+        const createOptions = (optionsList, setting) => {
+            const optionsArray = [];
+
+            for (let option of optionsList) {
+                const optionLayout = option.isSeparator ?
+                    `<option disabled>_________</option>` :
+                    `<option value="${option.bodyField}" ${isActive(option.bodyField, setting)}>${option.name}</option> `
+
+                optionsArray.push(optionLayout)
+            }
+
+            return optionsArray.join("");
+        }
+
+        const createLineHtml = (settings, lineLabelFromSettings) => `
+        <h3>${settings["title"]}</h3>
+        <div>      
+          <div class="block form-group">
+            <label for=${settings["id"]}-type>Тип поля</label>
+            <select id=${settings["id"]}-type class="input-types">
+              ${createOptions(formOptions, lineLabelFromSettings[0])}
+            </select>
+          </div>
+          <div class="block form-group custom-fields-settings">
+            <label>
+              Название поля <br />
+              <input type="TEXT" id=${settings["id"]} value=${
+                      lineLabelFromSettings[2] || ""
+                    } >
+            </label>
+          </div>
+          <div class="block form-group custom-fields-settings">
+            <label>
+              <input type="checkbox" id=${settings["id"]}-multiple ${
+                      lineLabelFromSettings[1] === true ? "checked" : ""
+                    } >
+                Множественное?
+            </label>
+          </div>
+          <hr>
+        </div>`
+
+        const toggleInput = (event) => {
+            var target = $(event.target);
+
+            if (
+                target.value === "customFields" ||
+                target.value === "ids"
+            ) {
+                target.parent().parent().find(".custom-fields-settings").show();
+                target.parent().parent().find("input[type=checkbox]").prop('checked', false);
+            } else {
+                target.parent().parent().find(".custom-fields-settings").hide();
+            }
+        }
+
+        const getLabelSettings = (settings) => settings ? settings.split("-") : "";
+
         /**
          * Callback function that populates the notification options using
          * previously saved values.
@@ -118,103 +230,19 @@
             $("#endpoint").val(settings.endpoint);
             $("#key").val(settings.key);
 
-            globalSetting = {
+            window.globalSetting = {
                 formItems: settings.formItems,
             };
 
-            for (var i = 0; i < settings.formItems.length; i++) {
+            for (let formItemSetting of settings.formItems) {
                 var line = document.createElement("tr");
 
-                var lineLabelFromSettings = "";
-                var lineLabelFromSettingsString =
-                    settings[settings.formItems[i]["id"]];
-                if (typeof lineLabelFromSettingsString !== "undefined") {
-                    lineLabelFromSettings = lineLabelFromSettingsString.split("-");
-                }
-                console.log(lineLabelFromSettings);
-                line.innerHTML = `
-        <h3>${settings.formItems[i]["title"]}</h3>
-        <div>
-         
-<div class="block form-group">
-  <label for=${settings.formItems[i]["id"]}-type>Тип поля</label>
-  <select id=${settings.formItems[i]["id"]}-type class="input-types">
-    <option value="none" ${
-      lineLabelFromSettings[0] === "none" ? "selected" : ""
-    }>Не передавать</option> 
-    <option disabled>_________</option>
-    <option value="authenticationTicket" ${
-      lineLabelFromSettings[0] === "authenticationTicket" ? "selected" : ""
-    }>Тикет</option> 
-    <option disabled>_________</option>
-    <option value="email" ${
-      lineLabelFromSettings[0] === "email" ? "selected" : ""
-    }>Email</option> 
-    <option value="mobilePhone" ${
-      lineLabelFromSettings[0] === "mobilePhone" ? "selected" : ""
-    }>Телефон</option> 
-    <option disabled>_________</option>
-    <option value="birthDate" ${
-      lineLabelFromSettings[0] === "birthDate" ? "selected" : ""
-    }>Дата рождения</option> 
-    <option disabled>_________</option>
-    <option value="firstName" ${
-      lineLabelFromSettings[0] === "firstName" ? "selected" : ""
-    } >Имя</option> 
-    <option value="lastName" ${
-      lineLabelFromSettings[0] === "lastName" ? "selected" : ""
-    } >Фамилия</option>
-    <option value="middleName" ${
-      lineLabelFromSettings[0] === "middleName" ? "selected" : ""
-    } >Отчество</option>
-    <option disabled>_________</option>
-    <option value="customFields" ${
-      lineLabelFromSettings[0] === "customFields" ? "selected" : ""
-    }>Доп. поле</option>
-    <option value="ids" ${
-      lineLabelFromSettings[0] === "ids" ? "selected" : ""
-    }>Идентификатор</option>
-  </select>
-</div>
-<div class="block form-group custom-fields-settings">
-  <label>
-    Название поля <br />
-    <input type="TEXT" id=${settings.formItems[i]["id"]} value=${
-            lineLabelFromSettings[2] || ""
-          } >
-  </label>
-</div>
-<div class="block form-group custom-fields-settings">
-  <label>
-     <input type="checkbox" id=${settings.formItems[i]["id"]}-multiple ${
-            lineLabelFromSettings[1] === "true" ? "checked" : ""
-          } >
-      Множественное?
-   </label>
-</div>
-<hr>
-        </div>
-         
-        `;
+                line.innerHTML = createLineHtml(formItemSetting, getLabelSettings(settings[formItemSetting["id"]]));
 
                 $("#field-options").append(line);
 
-                function toggleInput(event) {
-                    var target = $(event.target);
-                    console.log(target.parent().parent().find(".input-name"));
-                    if (
-                        event.target.value === "customFields" ||
-                        event.target.value === "ids"
-                    ) {
-                        target.parent().parent().find(".custom-fields-settings").show();
-                        target.parent().parent().find("input[type=checkbox]").prop('checked', false);
-                    } else {
-                        target.parent().parent().find(".custom-fields-settings").hide();
-                    }
-                }
-                $(".input-types").change(toggleInput);
 
-                console.log($("[value='customFields']"));
+                $(".input-types").change(toggleInput);
 
                 $(".custom-fields-settings").hide();
 
