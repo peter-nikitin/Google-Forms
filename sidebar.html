@@ -211,10 +211,10 @@
 
         const toggleInput = (event) => {
             var target = $(event.target);
-
             if (
-                target.value === "customFields" ||
-                target.value === "ids"
+                target.val() === "customFields" ||
+                target.val() === "ids" ||
+                target.val() === "actionCustomFields"
             ) {
                 target.parent().parent().find(".custom-fields-settings").show();
                 target.parent().parent().find("input[type=checkbox]").prop('checked', false);
@@ -247,13 +247,12 @@
 
                 $("#field-options").append(line);
 
-
                 $(".input-types").change(toggleInput);
 
                 $(".custom-fields-settings").hide();
 
                 $(".input-types").each(function(index, element) {
-                    if ($(this).val() === "customFields" || $(this).val() === "ids") {
+                    if ($(this).val() === "customFields" || $(this).val() === "ids" || $(this).val() === "actionCustomFields") {
                         $(this).parent().parent().find(".custom-fields-settings").show();
                     }
                 });
